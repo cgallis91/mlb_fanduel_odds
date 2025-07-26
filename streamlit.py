@@ -123,24 +123,13 @@ for tab, date_str in zip(tabs, tab_dates):
                 current_label = "Close" if has_started else "Current"
 
                 # Team column: add score if started, else blank
-                away_score = f"<span style='color:#2176ae; font-weight:600;'>{score_away}</span>" if has_started and score_away is not None else ""
-                home_score = f"<span style='color:#2176ae; font-weight:600;'>{score_home}</span>" if has_started and score_home is not None else ""
+                # Score is right-aligned in a fixed-width box for both teams
+                score_box_style = "display:inline-block; min-width:2.5em; text-align:right; margin-left:1em; color:#2176ae; font-weight:600;"
+                away_score_html = f"<span style='{score_box_style}'>{score_away}</span>" if has_started and score_away is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
+                home_score_html = f"<span style='{score_box_style}'>{score_home}</span>" if has_started and score_home is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
 
                 # Footer: "Current Update" -> "Close" if started
                 footer_update_label = "Close" if has_started else "Current Update"
-
-                # --- DEBUGGING INFO (easy to remove later) ---
-                with st.expander("Debug Info", expanded=False):
-                    st.write({
-                        "game_status_text": status,
-                        "score_home": score_home,
-                        "score_away": score_away,
-                        "has_started": has_started,
-                        "header_time_or_status": header_time_or_status,
-                        "current_label": current_label,
-                        "away_team": away_full,
-                        "home_team": home_full,
-                    })
 
                 st.markdown(
                     f"""
@@ -166,7 +155,12 @@ for tab, date_str in zip(tabs, tab_dates):
                                     <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE; border-right:2px solid #888;">{current_label}</th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:center; padding:4px 8px; border-top:none; border-left:2px solid #888;">{away_nick} {away_score}</td>
+                                    <td style="text-align:left; padding:4px 8px; border-top:none; border-left:2px solid #888; white-space:nowrap;">
+                                        <span style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span>{away_nick}</span>
+                                            {away_score_html}
+                                        </span>
+                                    </td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
@@ -175,7 +169,12 @@ for tab, date_str in zip(tabs, tab_dates):
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
                                 </tr>
                                 <tr style="background-color:#f8f8fa;">
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{home_nick} {home_score}</td>
+                                    <td style="text-align:left; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888; white-space:nowrap;">
+                                        <span style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span>{home_nick}</span>
+                                            {home_score_html}
+                                        </span>
+                                    </td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_odds(row['ml_opening_home'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-bottom:2px solid #888;">{format_odds(row['ml_current_home'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
