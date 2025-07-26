@@ -7,24 +7,20 @@ import pytz
 st.set_page_config(page_title="MLB FanDuel Odds Tracker", layout="wide")
 st.title("MLB FanDuel Odds Tracker")
 
-# --- Data Handling ---
 @st.cache_data(show_spinner=True)
 def get_data():
     return scrape_odds()
 
-# Update Data Button
 if st.button("Update Data", type="primary"):
     st.cache_data.clear()
     st.experimental_rerun()
 
-# Fetch data
 df = get_data()
 
 if df.empty:
     st.warning("No data available. Please try again later.")
     st.stop()
 
-# --- Date Handling for Tabs ---
 et = pytz.timezone("US/Eastern")
 now_et = datetime.now(et)
 today = now_et.date()
@@ -36,7 +32,6 @@ tab_labels = [
 tab_dates = [today.strftime("%Y-%m-%d"), tomorrow.strftime("%Y-%m-%d")]
 
 def format_team_nickname(nickname, full):
-    # Handle Athletics Athletics
     if full == "Athletics Athletics" or nickname == "Athletics Athletics":
         return "Athletics"
     return nickname
@@ -96,7 +91,6 @@ for tab, date_str in zip(tabs, tab_dates):
         if games.empty:
             st.info("No games found for this day.")
         else:
-            # Sort by start time (Eastern)
             games['start_time_et'] = pd.to_datetime(games['start_date']).dt.tz_convert('US/Eastern').dt.strftime('%I:%M %p')
             games = games.sort_values('start_date')
             for _, row in games.iterrows():
@@ -107,7 +101,6 @@ for tab, date_str in zip(tabs, tab_dates):
                 venue = row['venue']
                 city = row['venue_city']
                 state = row['venue_state']
-                # Format start time in ET
                 try:
                     dt_et = pd.to_datetime(row['start_date']).tz_convert('US/Eastern')
                     start_time_str = dt_et.strftime('%-I:%M %p EST')
@@ -124,36 +117,36 @@ for tab, date_str in zip(tabs, tab_dates):
                             </div>
                             <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em;">
                                 <tr style="background-color:#f0f2f6;">
-                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border: 2px solid #888; border-bottom: none;">Team</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-top: 2px solid #888; border-bottom: none; border-right: 2px solid #888; border-left: 2px solid #888;">Money Line</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-top: 2px solid #888; border-bottom: none; border-right: 2px solid #888;">Run Line</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-top: 2px solid #888; border-bottom: none;">Total</th>
+                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Team</th>
+                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Money Line</th>
+                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Run Line</th>
+                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-right:2px solid #888; border-bottom:none;">Total</th>
                                 </tr>
                                 <tr style="background-color:#f0f2f6;">
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE; border-right: 1px solid #EEE;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE; border-right: 2px solid #888;">Current</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE; border-right: 1px solid #EEE;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE; border-right: 2px solid #888;">Current</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE; border-right: 1px solid #EEE;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom: 1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE; border-right:2px solid #888;">Current</th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:center; padding:4px 8px; border-top: 2px solid #888; border-left: 2px solid #888;">{away_nick}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_odds(row['ml_opening_away'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888;">{format_odds(row['ml_current_away'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888;">{format_run_line(row['rl_current_away_spread'], row['rl_current_away_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_total_line("Over", row['total_opening_line'], row['total_opening_over_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-top:2px solid #888; border-left:2px solid #888;">{away_nick}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_away'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_away'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_run_line(row['rl_current_away_spread'], row['rl_current_away_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_total_line("Over", row['total_opening_line'], row['total_opening_over_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
                                 </tr>
                                 <tr style="background-color:#f8f8fa;">
-                                    <td style="text-align:center; padding:4px 8px; border-left: 2px solid #888; border-bottom: 2px solid #888;">{home_nick}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_odds(row['ml_opening_home'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888;">{format_odds(row['ml_current_home'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888;">{format_run_line(row['rl_current_home_spread'], row['rl_current_home_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 1px solid #EEE;">{format_total_line("Under", row['total_opening_line'], row['total_opening_under_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-right: 2px solid #888; border-bottom: 2px solid #888;">{format_total_line("Under", row['total_current_line'], row['total_current_under_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{home_nick}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_home'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_home'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_run_line(row['rl_current_home_spread'], row['rl_current_home_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_total_line("Under", row['total_opening_line'], row['total_opening_under_odds'])}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888; border-bottom:2px solid #888;">{format_total_line("Under", row['total_current_line'], row['total_current_under_odds'])}</td>
                                 </tr>
                             </table>
                             <div style="font-size:0.85em; color:#888; margin-top:0.5em;">
