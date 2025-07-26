@@ -86,7 +86,7 @@ def get_data():
 
 if st.button("Update Data", type="primary"):
     st.cache_data.clear()
-    st.experimental_rerun()
+    st.rerun()
 
 df = get_data()
 
