@@ -12,7 +12,6 @@ st.title("MLB FanDuel Odds Tracker")
 def get_data():
     return scrape_odds()
 
-# Only call rerun inside the button handler!
 if st.button("Update Data", type="primary"):
     st.cache_data.clear()
     st.experimental_rerun()
@@ -126,21 +125,36 @@ for tab, date_str in zip(tabs, tab_dates):
                 city = row['venue_city']
                 state = row['venue_state']
 
-                status = str(row.get('game_status_text', "")).strip()
+                status_text = str(row.get('game_status_text', "")).strip()
+                status_code = str(row.get('game_status_code', "")).strip()
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
 
-                # Only treat as started if status is present, not a time string, and not "Scheduled"/"Pre-Game"
-                has_started = (
-                    bool(status)
-                    and not is_time_string(status)
-                    and status.lower() not in ["scheduled", "pre-game", "pregame", "pre game"]
+                # --- DEBUGGING OUTPUT (remove/comment out when not needed) ---
+                st.markdown(
+                    f"<div style='font-size:0.9em; color:#B00; margin-bottom:0.2em;'>"
+                    f"<b>DEBUG:</b> status_code={status_code} | status_text='{status_text}' | "
+                    f"score_away={score_away} | score_home={score_home}"
+                    f"</div>",
+                    unsafe_allow_html=True
                 )
+                # ------------------------------------------------------------
+
+                # Logic: 1 = final, 6 = not started, all others = in progress/final
+                if status_code == "1":
+                    has_started = True
+                    is_final = True
+                elif status_code == "6":
+                    has_started = False
+                    is_final = False
+                else:
+                    has_started = True
+                    is_final = False
 
                 # Header: show status if started, else show time
-                header_time_or_status = status if has_started and status else row['start_time_et']
+                header_time_or_status = status_text if has_started and status_text else row['start_time_et']
 
-                # Table "Current" -> "Close" if started
+                # Table "Current" -> "Close" if started/final
                 current_label = "Close" if has_started else "Current"
 
                 # Team column: add score if started, else blank, right-aligned in fixed-width box
@@ -148,7 +162,7 @@ for tab, date_str in zip(tabs, tab_dates):
                 away_score_html = f"<span style='{score_box_style}'>{score_away}</span>" if has_started and score_away is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
                 home_score_html = f"<span style='{score_box_style}'>{score_home}</span>" if has_started and score_home is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
 
-                # Footer: "Current Update" -> "Close" if started
+                # Footer: "Current Update" -> "Close" if started/final
                 footer_update_label = "Close" if has_started else "Current Update"
 
                 st.markdown(
