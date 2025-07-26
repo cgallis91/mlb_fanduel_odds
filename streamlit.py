@@ -122,11 +122,12 @@ st.markdown("""
             display: none;
         }
     }
-    /* Blue tab styling */
+    /* Blue tab underline styling */
     .stTabs [data-baseweb="tab-list"] {
         background: #e3ecf7;
         border-radius: 10px 10px 0 0;
         padding: 0.2em 0.2em 0 0.2em;
+        border-bottom: 2.5px solid #2176ae;
     }
     .stTabs [data-baseweb="tab"] {
         color: #2176ae !important;
@@ -136,10 +137,25 @@ st.markdown("""
         margin-right: 0.2em;
         background: #e3ecf7 !important;
         border: none !important;
+        box-shadow: none !important;
+        position: relative;
+        transition: color 0.2s;
     }
     .stTabs [aria-selected="true"] {
-        background: #2176ae !important;
-        color: #fff !important;
+        background: #e3ecf7 !important;
+        color: #1a365d !important;
+    }
+    .stTabs [aria-selected="true"]::after {
+        content: "";
+        display: block;
+        margin: 0 auto;
+        width: 70%;
+        height: 4px;
+        border-radius: 2px 2px 0 0;
+        background: #2176ae;
+        position: absolute;
+        left: 15%;
+        bottom: -8px;
     }
     /* Blue update button */
     .stButton > button {
@@ -212,7 +228,6 @@ def format_odds(val, highlight=False):
             val_str = f"{val}"
     else:
         val_str = str(val)
-    # Remove highlight logic
     return val_str
 
 def format_line(val):
