@@ -8,6 +8,78 @@ import re
 st.set_page_config(page_title="MLB FanDuel Odds Tracker", layout="wide")
 st.title("MLB FanDuel Odds Tracker")
 
+# --- Modern CSS Styling ---
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
+    .odds-card {
+        border-radius: 14px;
+        box-shadow: 0 2px 12px #e0e7ef;
+        border: 1.5px solid #d1d5db;
+        background: #fff;
+        margin-bottom: 2em;
+        transition: box-shadow 0.2s, border-color 0.2s;
+        font-family: 'Inter', sans-serif;
+    }
+    .odds-card:hover {
+        box-shadow: 0 6px 24px #b3c6e0;
+        border-color: #2176ae;
+    }
+    .odds-header-main {
+        font-size: 1.45em;
+        font-weight: 700;
+        color: #1a365d;
+        margin-bottom: 0.15em;
+        letter-spacing: 0.01em;
+    }
+    .odds-header-sub {
+        font-size: 1.08em;
+        font-weight: 500;
+        color: #3a506b;
+        margin-bottom: 0.7em;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 2px 14px;
+        border-radius: 12px;
+        font-size: 0.97em;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        margin-right: 0.7em;
+        background: #e5e7eb;
+        color: #444;
+    }
+    .status-badge.final { background: #e6f9ea; color: #1b7f3a; }
+    .status-badge.progress { background: #e7f0fa; color: #2176ae; }
+    .status-badge.notstarted { background: #f3f4f6; color: #888; }
+    .odds-table {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px #f0f2f6;
+        overflow: hidden;
+        margin-bottom: 0.5em;
+    }
+    .odds-table th {
+        background: #f0f4fa;
+        font-weight: 700;
+        color: #1a365d;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 8px 8px;
+    }
+    .odds-table td {
+        padding: 7px 8px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 1em;
+    }
+    .odds-table tr:last-child td {
+        border-bottom: none;
+    }
+    .odds-table tr:nth-child(even) td {
+        background: #f8fafc;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 @st.cache_data(show_spinner=True)
 def get_data():
     return scrape_odds()
@@ -131,9 +203,15 @@ for tab, date_str in zip(tabs, tab_dates):
                 if is_time_status(status_text):
                     has_started = False
                     is_final = False
+                    status_badge = '<span class="status-badge notstarted">Not Started</span>'
+                elif status_text.lower() == "final":
+                    has_started = True
+                    is_final = True
+                    status_badge = '<span class="status-badge final">Final</span>'
                 else:
                     has_started = True
-                    is_final = status_text.lower() == "final"
+                    is_final = False
+                    status_badge = '<span class="status-badge progress">In Progress</span>'
 
                 # Header: show status if started, else show time
                 header_time_or_status = status_text if has_started and status_text else row['start_time_et']
@@ -151,13 +229,15 @@ for tab, date_str in zip(tabs, tab_dates):
 
                 st.markdown(
                     f"""
-                    <div style="border:1.5px solid #888; border-radius:10px; margin-bottom:1.5em; background-color:#FAFAFA; box-shadow:0 2px 8px #EEE;">
-                        <div style="padding:1em 1em 0.5em 1em;">
-                            <div style="font-size:1.2em; font-weight:600;">{away_full} at {home_full}</div>
-                            <div style="color:#555; font-size:0.95em; margin-bottom:0.5em;">
-                                {header_time_or_status} | {venue} | {city}, {state}
+                    <div class="odds-card">
+                        <div style="padding:1.3em 1.3em 0.8em 1.3em;">
+                            <div class="odds-header-main">{away_full} at {home_full}</div>
+                            <div class="odds-header-sub">
+                                {status_badge}
+                                <span>{header_time_or_status}</span>
+                                &nbsp;|&nbsp; {venue} | {city}, {state}
                             </div>
-                            <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em; table-layout:fixed;">
+                            <table class="odds-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
                                 <colgroup>
                                     <col style="width:{col_widths[0]};" />
                                     <col style="width:{col_widths[1]};" />
@@ -167,50 +247,50 @@ for tab, date_str in zip(tabs, tab_dates):
                                     <col style="width:{col_widths[5]};" />
                                     <col style="width:{col_widths[6]};" />
                                 </colgroup>
-                                <tr style="background-color:#f0f2f6;">
-                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Team</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Money Line</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Run Line</th>
-                                    <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-right:2px solid #888; border-bottom:none;">Total</th>
-                                </tr>
-                                <tr style="background-color:#f0f2f6;">
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">{current_label}</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">{current_label}</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE; border-right:2px solid #888;">{current_label}</th>
+                                <tr>
+                                    <th rowspan="2" style="text-align:center;">Team</th>
+                                    <th colspan="2" style="text-align:center;">Money Line</th>
+                                    <th colspan="2" style="text-align:center;">Run Line</th>
+                                    <th colspan="2" style="text-align:center;">Total</th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left; padding:4px 8px; border-top:none; border-left:2px solid #888; white-space:nowrap;">
+                                    <th style="text-align:center;">Open</th>
+                                    <th style="text-align:center;">{current_label}</th>
+                                    <th style="text-align:center;">Open</th>
+                                    <th style="text-align:center;">{current_label}</th>
+                                    <th style="text-align:center;">Open</th>
+                                    <th style="text-align:center;">{current_label}</th>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left; white-space:nowrap;">
                                         <span style="display:flex; justify-content:space-between; align-items:center;">
                                             <span>{away_nick}</span>
                                             {away_score_html}
                                         </span>
                                     </td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_away'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_away'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_run_line(row['rl_current_away_spread'], row['rl_current_away_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_total_line("Over", row['total_opening_line'], row['total_opening_over_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_opening_away'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_current_away'])}</td>
+                                    <td style="text-align:center;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
+                                    <td style="text-align:center;">{format_run_line(row['rl_current_away_spread'], row['rl_current_away_odds'])}</td>
+                                    <td style="text-align:center;">{format_total_line("Over", row['total_opening_line'], row['total_opening_over_odds'])}</td>
+                                    <td style="text-align:center;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
                                 </tr>
-                                <tr style="background-color:#f8f8fa;">
-                                    <td style="text-align:left; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888; white-space:nowrap;">
+                                <tr>
+                                    <td style="text-align:left; white-space:nowrap;">
                                         <span style="display:flex; justify-content:space-between; align-items:center;">
                                             <span>{home_nick}</span>
                                             {home_score_html}
                                         </span>
                                     </td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_odds(row['ml_opening_home'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-bottom:2px solid #888;">{format_odds(row['ml_current_home'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-bottom:2px solid #888;">{format_run_line(row['rl_current_home_spread'], row['rl_current_home_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_total_line("Under", row['total_opening_line'], row['total_opening_under_odds'])}</td>
-                                    <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888; border-bottom:2px solid #888;">{format_total_line("Under", row['total_current_line'], row['total_current_under_odds'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_opening_home'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_current_home'])}</td>
+                                    <td style="text-align:center;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
+                                    <td style="text-align:center;">{format_run_line(row['rl_current_home_spread'], row['rl_current_home_odds'])}</td>
+                                    <td style="text-align:center;">{format_total_line("Under", row['total_opening_line'], row['total_opening_under_odds'])}</td>
+                                    <td style="text-align:center;">{format_total_line("Under", row['total_current_line'], row['total_current_under_odds'])}</td>
                                 </tr>
                             </table>
-                            <div style="font-size:0.85em; color:#888; margin-top:0.5em;">
+                            <div style="font-size:0.92em; color:#888; margin-top:0.7em;">
                                 Open: {format_time_footer(row['ml_opening_time'])} &nbsp;|&nbsp; {footer_update_label}: {format_time_footer(row['last_line_update'])}
                             </div>
                         </div>
