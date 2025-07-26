@@ -89,8 +89,24 @@ def is_time_string(s):
         return False
     return bool(re.match(r"^\d{1,2}:\d{2}\s*[AP]M", s.strip(), re.IGNORECASE))
 
+def format_display_time(dt_str):
+    # Always display as 12-hour time with AM/PM and EST
+    try:
+        dt = pd.to_datetime(dt_str).tz_convert('US/Eastern')
+        return dt.strftime("%-I:%M %p EST")
+    except Exception:
+        return dt_str
+
 tab1, tab2 = st.tabs(tab_labels)
 tabs = [tab1, tab2]
+
+# Standard column widths for all cards
+col_widths = [
+    "180px",  # Team
+    "70px", "70px",  # Money Line
+    "90px", "90px",  # Run Line
+    "110px", "110px" # Total
+]
 
 for tab, date_str in zip(tabs, tab_dates):
     with tab:
@@ -98,7 +114,7 @@ for tab, date_str in zip(tabs, tab_dates):
         if games.empty:
             st.info("No games found for this day.")
         else:
-            games['start_time_et'] = pd.to_datetime(games['start_date']).dt.tz_convert('US/Eastern').dt.strftime('%-I:%M %p EST')
+            games['start_time_et'] = games['start_date'].apply(format_display_time)
             games = games.sort_values('start_date')
             for _, row in games.iterrows():
                 away_nick = format_team_nickname(row['away_team_nickname'], row['away_team_full'])
@@ -113,7 +129,7 @@ for tab, date_str in zip(tabs, tab_dates):
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
 
-                # Determine if the game has started (status is not a time string and not empty)
+                # Only treat as started if status is present and not a time string
                 has_started = bool(status and not is_time_string(status))
 
                 # Header: show status if started, else show time
@@ -122,8 +138,7 @@ for tab, date_str in zip(tabs, tab_dates):
                 # Table "Current" -> "Close" if started
                 current_label = "Close" if has_started else "Current"
 
-                # Team column: add score if started, else blank
-                # Score is right-aligned in a fixed-width box for both teams
+                # Team column: add score if started, else blank, right-aligned in fixed-width box
                 score_box_style = "display:inline-block; min-width:2.5em; text-align:right; margin-left:1em; color:#2176ae; font-weight:600;"
                 away_score_html = f"<span style='{score_box_style}'>{score_away}</span>" if has_started and score_away is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
                 home_score_html = f"<span style='{score_box_style}'>{score_home}</span>" if has_started and score_home is not None else "<span style='min-width:2.5em; display:inline-block;'></span>"
@@ -139,7 +154,16 @@ for tab, date_str in zip(tabs, tab_dates):
                             <div style="color:#555; font-size:0.95em; margin-bottom:0.5em;">
                                 {header_time_or_status} | {venue} | {city}, {state}
                             </div>
-                            <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em;">
+                            <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em; table-layout:fixed;">
+                                <colgroup>
+                                    <col style="width:{col_widths[0]};" />
+                                    <col style="width:{col_widths[1]};" />
+                                    <col style="width:{col_widths[2]};" />
+                                    <col style="width:{col_widths[3]};" />
+                                    <col style="width:{col_widths[4]};" />
+                                    <col style="width:{col_widths[5]};" />
+                                    <col style="width:{col_widths[6]};" />
+                                </colgroup>
                                 <tr style="background-color:#f0f2f6;">
                                     <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Team</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Money Line</th>
