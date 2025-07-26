@@ -131,20 +131,9 @@ for tab, date_str in zip(tabs, tab_dates):
                 if is_time_status(status_text):
                     has_started = False
                     is_final = False
-                    status_type = "not started"
                 else:
                     has_started = True
                     is_final = status_text.lower() == "final"
-                    status_type = "started" if not is_final else "final"
-
-                # --- DEBUGGING OUTPUT (remove/comment out when not needed) ---
-                st.markdown(
-                    f"<div style='font-size:0.9em; color:#B00; margin-bottom:0.2em;'>"
-                    f"<b>DEBUG:</b> status_text='{status_text}' | score_away={score_away} | score_home={score_home} | status type={status_type}"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
-                # ------------------------------------------------------------
 
                 # Header: show status if started, else show time
                 header_time_or_status = status_text if has_started and status_text else row['start_time_et']
