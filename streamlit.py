@@ -12,6 +12,7 @@ st.title("MLB FanDuel Odds Tracker")
 def get_data():
     return scrape_odds()
 
+# Only call rerun inside the button handler!
 if st.button("Update Data", type="primary"):
     st.cache_data.clear()
     st.experimental_rerun()
@@ -125,12 +126,16 @@ for tab, date_str in zip(tabs, tab_dates):
                 city = row['venue_city']
                 state = row['venue_state']
 
-                status = row.get('game_status_text', "")
+                status = str(row.get('game_status_text', "")).strip()
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
 
-                # Only treat as started if status is present and not a time string
-                has_started = bool(status and not is_time_string(status))
+                # Only treat as started if status is present, not a time string, and not "Scheduled"/"Pre-Game"
+                has_started = (
+                    bool(status)
+                    and not is_time_string(status)
+                    and status.lower() not in ["scheduled", "pre-game", "pregame", "pre game"]
+                )
 
                 # Header: show status if started, else show time
                 header_time_or_status = status if has_started and status else row['start_time_et']
