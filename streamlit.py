@@ -192,6 +192,9 @@ st.markdown(
 def get_data():
     return scrape_odds()
 
+# --- Always clear cache on page load for fresh data ---
+st.cache_data.clear()
+
 if st.button("Update Data", type="primary"):
     st.cache_data.clear()
     st.rerun()
