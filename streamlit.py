@@ -109,16 +109,14 @@ for tab, date_str in zip(tabs, tab_dates):
                 city = row['venue_city']
                 state = row['venue_state']
 
-                # --- LOGIC FOR STATUS, SCORES, HEADERS ---
                 status = row.get('game_status_text', "")
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
 
-                # Determine if status is a time (not started) or not (started)
-                # If status is not a time string and not empty, game has started
+                # Determine if the game has started (status is not a time string and not empty)
                 has_started = bool(status and not is_time_string(status))
 
-                # Header: show time if not started, else status text
+                # Header: show status if started, else show time
                 header_time_or_status = status if has_started and status else row['start_time_et']
 
                 # Table "Current" -> "Close" if started
