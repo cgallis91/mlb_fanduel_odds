@@ -83,11 +83,9 @@ def format_time_footer(dt_str):
     except Exception:
         return dt_str
 
-def is_time_string(s):
-    # Matches times like "7:05 PM EST", "12:30 PM", etc.
-    if not isinstance(s, str):
-        return False
-    return bool(re.match(r"^\d{1,2}:\d{2}\s*[AP]M", s.strip(), re.IGNORECASE))
+def is_time_status(status_text):
+    # Matches times like '18:10 ET', '7:05 PM EST', '12:30 PM', etc.
+    return bool(re.match(r"^\d{1,2}:\d{2}(\s*[AP]M)?(\s*ET|EST)?$", status_text.strip(), re.IGNORECASE))
 
 def format_display_time(dt_str):
     # Always display as 12-hour time with AM/PM and EST
@@ -126,30 +124,27 @@ for tab, date_str in zip(tabs, tab_dates):
                 state = row['venue_state']
 
                 status_text = str(row.get('game_status_text', "")).strip()
-                status_code = str(row.get('game_status_code', "")).strip()
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
+
+                # --- LOGIC: Only use status_text ---
+                if is_time_status(status_text):
+                    has_started = False
+                    is_final = False
+                    status_type = "not started"
+                else:
+                    has_started = True
+                    is_final = status_text.lower() == "final"
+                    status_type = "started" if not is_final else "final"
 
                 # --- DEBUGGING OUTPUT (remove/comment out when not needed) ---
                 st.markdown(
                     f"<div style='font-size:0.9em; color:#B00; margin-bottom:0.2em;'>"
-                    f"<b>DEBUG:</b> status_code={status_code} | status_text='{status_text}' | "
-                    f"score_away={score_away} | score_home={score_home}"
+                    f"<b>DEBUG:</b> status_text='{status_text}' | score_away={score_away} | score_home={score_home} | status type={status_type}"
                     f"</div>",
                     unsafe_allow_html=True
                 )
                 # ------------------------------------------------------------
-
-                # Logic: 1 = final, 6 = not started, all others = in progress/final
-                if status_code == "1":
-                    has_started = True
-                    is_final = True
-                elif status_code == "6":
-                    has_started = False
-                    is_final = False
-                else:
-                    has_started = True
-                    is_final = False
 
                 # Header: show status if started, else show time
                 header_time_or_status = status_text if has_started and status_text else row['start_time_et']
