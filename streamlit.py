@@ -65,10 +65,8 @@ st.markdown("""
         margin-bottom: 0.7em;
     }
     .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4em;
-        padding: 2px 14px 2px 10px;
+        display: inline-block;
+        padding: 2px 14px;
         border-radius: 12px;
         font-size: 0.97em;
         font-weight: 600;
@@ -80,7 +78,6 @@ st.markdown("""
     .status-badge.final { background: #e6f9ea; color: #1b7f3a; }
     .status-badge.progress { background: #e7f0fa; color: #2176ae; }
     .status-badge.notstarted { background: #f3f4f6; color: #888; }
-    .status-badge .icon { font-size: 1.1em; margin-right: 0.2em; }
     .odds-table {
         background: #fff;
         border-radius: 10px;
@@ -125,12 +122,41 @@ st.markdown("""
             display: none;
         }
     }
-    .highlight-odds {
+    /* Blue tab styling */
+    .stTabs [data-baseweb="tab-list"] {
         background: #e3ecf7;
-        font-weight: 700;
-        border-radius: 6px;
-        padding: 2px 6px;
-        color: #2176ae;
+        border-radius: 10px 10px 0 0;
+        padding: 0.2em 0.2em 0 0.2em;
+    }
+    .stTabs [data-baseweb="tab"] {
+        color: #2176ae !important;
+        font-weight: 600;
+        font-size: 1.08em;
+        border-radius: 8px 8px 0 0;
+        margin-right: 0.2em;
+        background: #e3ecf7 !important;
+        border: none !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #2176ae !important;
+        color: #fff !important;
+    }
+    /* Blue update button */
+    .stButton > button {
+        background: linear-gradient(90deg, #2176ae 0%, #1a365d 100%) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 1.1em !important;
+        padding: 0.5em 2em !important;
+        margin-bottom: 1.5em !important;
+        box-shadow: 0 2px 8px #e3ecf7;
+        transition: background 0.2s;
+    }
+    .stButton > button:hover {
+        background: linear-gradient(90deg, #1a365d 0%, #2176ae 100%) !important;
+        color: #fff !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -140,7 +166,7 @@ st.markdown(
     """
     <div class="page-header">
         <h1>MLB FanDuel Odds Tracker</h1>
-        <h2>Live Money Line, Run Line, and Total Odds &mdash; Modern, Responsive, and Easy to Read</h2>
+        <h2>Opening and Current FanDuel Lines and Odds for MLB Games</h2>
     </div>
     """,
     unsafe_allow_html=True
@@ -186,8 +212,7 @@ def format_odds(val, highlight=False):
             val_str = f"{val}"
     else:
         val_str = str(val)
-    if highlight:
-        return f'<span class="highlight-odds">{val_str}</span>'
+    # Remove highlight logic
     return val_str
 
 def format_line(val):
@@ -201,13 +226,13 @@ def format_line(val):
 def format_run_line(spread, odds, highlight=False):
     if spread is None or pd.isna(spread) or odds is None or pd.isna(odds):
         return "-"
-    odds_str = format_odds(odds, highlight=highlight)
+    odds_str = format_odds(odds)
     return f"{format_line(spread)} ({odds_str})"
 
 def format_total_line(overunder, line, odds, highlight=False):
     if line is None or pd.isna(line) or odds is None or pd.isna(odds):
         return "-"
-    odds_str = format_odds(odds, highlight=highlight)
+    odds_str = format_odds(odds)
     return f"{overunder} {format_line(line)} ({odds_str})"
 
 def format_time_footer(dt_str):
@@ -242,11 +267,11 @@ def format_display_time(dt_str):
 
 def get_status_badge(status_text):
     if is_time_status(status_text):
-        return '<span class="status-badge notstarted"><span class="icon">⏰</span>Not Started</span>'
+        return '<span class="status-badge notstarted">Not Started</span>'
     elif status_text.lower() == "final":
-        return '<span class="status-badge final"><span class="icon">✔️</span>Final</span>'
+        return '<span class="status-badge final">Final</span>'
     else:
-        return '<span class="status-badge progress"><span class="icon">▶️</span>In Progress</span>'
+        return '<span class="status-badge progress">In Progress</span>'
 
 tab1, tab2 = st.tabs(tab_labels)
 tabs = [tab1, tab2]
@@ -307,26 +332,6 @@ for tab, date_str in zip(tabs, tab_dates):
                 # Footer: "Current Update" -> "Close" if started/final
                 footer_update_label = "Close" if has_started else "Current Update"
 
-                # Highlight best odds (example: highlight the better of open/current for each row)
-                def highlight_best(val1, val2):
-                    try:
-                        if val1 is None or pd.isna(val1): return False, False
-                        if val2 is None or pd.isna(val2): return True, False
-                        v1, v2 = float(val1), float(val2)
-                        # For odds, higher is better for positive, lower (closer to zero) is better for negative
-                        if v1 >= 0 and v2 >= 0:
-                            return v1 > v2, v2 > v1
-                        elif v1 < 0 and v2 < 0:
-                            return v1 > v2, v2 > v1  # less negative is better
-                        else:
-                            return v1 > v2, v2 > v1
-                    except Exception:
-                        return False, False
-
-                ml_away_open_best, ml_away_cur_best = highlight_best(row['ml_opening_away'], row['ml_current_away'])
-                ml_home_open_best, ml_home_cur_best = highlight_best(row['ml_opening_home'], row['ml_current_home'])
-
-                # Render card
                 st.markdown(
                     f"""
                     <div class="odds-card">
@@ -369,8 +374,8 @@ for tab, date_str in zip(tabs, tab_dates):
                                             {away_score_html}
                                         </span>
                                     </td>
-                                    <td style="text-align:center;">{format_odds(row['ml_opening_away'], highlight=ml_away_open_best)}</td>
-                                    <td style="text-align:center;">{format_odds(row['ml_current_away'], highlight=ml_away_cur_best)}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_opening_away'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_current_away'])}</td>
                                     <td style="text-align:center;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
                                     <td style="text-align:center;">{format_run_line(row['rl_current_away_spread'], row['rl_current_away_odds'])}</td>
                                     <td style="text-align:center;">{format_total_line("Over", row['total_opening_line'], row['total_opening_over_odds'])}</td>
@@ -383,8 +388,8 @@ for tab, date_str in zip(tabs, tab_dates):
                                             {home_score_html}
                                         </span>
                                     </td>
-                                    <td style="text-align:center;">{format_odds(row['ml_opening_home'], highlight=ml_home_open_best)}</td>
-                                    <td style="text-align:center;">{format_odds(row['ml_current_home'], highlight=ml_home_cur_best)}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_opening_home'])}</td>
+                                    <td style="text-align:center;">{format_odds(row['ml_current_home'])}</td>
                                     <td style="text-align:center;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
                                     <td style="text-align:center;">{format_run_line(row['rl_current_home_spread'], row['rl_current_home_odds'])}</td>
                                     <td style="text-align:center;">{format_total_line("Under", row['total_opening_line'], row['total_opening_under_odds'])}</td>
