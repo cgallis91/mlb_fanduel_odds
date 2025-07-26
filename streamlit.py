@@ -129,6 +129,19 @@ for tab, date_str in zip(tabs, tab_dates):
                 # Footer: "Current Update" -> "Close" if started
                 footer_update_label = "Close" if has_started else "Current Update"
 
+                # --- DEBUGGING INFO (easy to remove later) ---
+                with st.expander("Debug Info", expanded=False):
+                    st.write({
+                        "game_status_text": status,
+                        "score_home": score_home,
+                        "score_away": score_away,
+                        "has_started": has_started,
+                        "header_time_or_status": header_time_or_status,
+                        "current_label": current_label,
+                        "away_team": away_full,
+                        "home_team": home_full,
+                    })
+
                 st.markdown(
                     f"""
                     <div style="border:1.5px solid #888; border-radius:10px; margin-bottom:1.5em; background-color:#FAFAFA; box-shadow:0 2px 8px #EEE;">
