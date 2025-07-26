@@ -103,9 +103,9 @@ for tab, date_str in zip(tabs, tab_dates):
                 state = row['venue_state']
 
                 # --- LOGIC FOR STATUS, SCORES, HEADERS ---
-                status = row['game_status_text'] if 'game_status_text' in row else ""
-                score_home = row['score_home'] if 'score_home' in row else None
-                score_away = row['score_away'] if 'score_away' in row else None
+                status = row.get('game_status_text', "")
+                score_home = row.get('score_home', None)
+                score_away = row.get('score_away', None)
 
                 is_final = isinstance(status, str) and status.lower().startswith("final")
                 is_in_progress = isinstance(status, str) and not is_final and status and not status.lower().startswith("scheduled") and not status.lower().startswith("not started")
