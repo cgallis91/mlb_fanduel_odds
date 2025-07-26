@@ -91,7 +91,7 @@ for tab, date_str in zip(tabs, tab_dates):
         if games.empty:
             st.info("No games found for this day.")
         else:
-            games['start_time_et'] = pd.to_datetime(games['start_date']).dt.tz_convert('US/Eastern').dt.strftime('%I:%M %p')
+            games['start_time_et'] = pd.to_datetime(games['start_date']).dt.tz_convert('US/Eastern').dt.strftime('%-I:%M %p EST')
             games = games.sort_values('start_date')
             for _, row in games.iterrows():
                 away_nick = format_team_nickname(row['away_team_nickname'], row['away_team_full'])
@@ -101,11 +101,28 @@ for tab, date_str in zip(tabs, tab_dates):
                 venue = row['venue']
                 city = row['venue_city']
                 state = row['venue_state']
-                try:
-                    dt_et = pd.to_datetime(row['start_date']).tz_convert('US/Eastern')
-                    start_time_str = dt_et.strftime('%-I:%M %p EST')
-                except Exception:
-                    start_time_str = row['start_date']
+
+                # --- LOGIC FOR STATUS, SCORES, HEADERS ---
+                status = row['game_status_text'] if 'game_status_text' in row else ""
+                score_home = row['score_home'] if 'score_home' in row else None
+                score_away = row['score_away'] if 'score_away' in row else None
+
+                is_final = isinstance(status, str) and status.lower().startswith("final")
+                is_in_progress = isinstance(status, str) and not is_final and status and not status.lower().startswith("scheduled") and not status.lower().startswith("not started")
+                has_started = is_final or is_in_progress
+
+                # Header: show time if not started, else status text
+                header_time_or_status = status if has_started and status else row['start_time_et']
+
+                # Table "Current" -> "Close" if started
+                current_label = "Close" if has_started else "Current"
+
+                # Team column: add score if started, else blank
+                away_score = f"<span style='color:#2176ae; font-weight:600;'>{score_away}</span>" if has_started and score_away is not None else "&nbsp;&nbsp;"
+                home_score = f"<span style='color:#2176ae; font-weight:600;'>{score_home}</span>" if has_started and score_home is not None else "&nbsp;&nbsp;"
+
+                # Footer: "Current Update" -> "Close" if started
+                footer_update_label = "Close" if has_started else "Current Update"
 
                 st.markdown(
                     f"""
@@ -113,25 +130,25 @@ for tab, date_str in zip(tabs, tab_dates):
                         <div style="padding:1em 1em 0.5em 1em;">
                             <div style="font-size:1.2em; font-weight:600;">{away_full} at {home_full}</div>
                             <div style="color:#555; font-size:0.95em; margin-bottom:0.5em;">
-                                {start_time_str} | {venue} | {city}, {state}
+                                {header_time_or_status} | {venue} | {city}, {state}
                             </div>
                             <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em;">
                                 <tr style="background-color:#f0f2f6;">
-                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Team</th>
+                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none; min-width:120px;">Team</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Money Line</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Run Line</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-right:2px solid #888; border-bottom:none;">Total</th>
                                 </tr>
                                 <tr style="background-color:#f0f2f6;">
                                     <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">{current_label}</th>
                                     <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">{current_label}</th>
                                     <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE; border-right:2px solid #888;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE; border-right:2px solid #888;">{current_label}</th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:center; padding:4px 8px; border-top:none; border-left:2px solid #888;">{away_nick}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-top:none; border-left:2px solid #888;">{away_nick} {away_score}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
@@ -140,7 +157,7 @@ for tab, date_str in zip(tabs, tab_dates):
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-right:2px solid #888;">{format_total_line("Over", row['total_current_line'], row['total_current_over_odds'])}</td>
                                 </tr>
                                 <tr style="background-color:#f8f8fa;">
-                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{home_nick}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{home_nick} {home_score}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_odds(row['ml_opening_home'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE; border-bottom:2px solid #888;">{format_odds(row['ml_current_home'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888; border-bottom:2px solid #888;">{format_run_line(row['rl_opening_home_spread'], row['rl_opening_home_odds'])}</td>
@@ -150,7 +167,7 @@ for tab, date_str in zip(tabs, tab_dates):
                                 </tr>
                             </table>
                             <div style="font-size:0.85em; color:#888; margin-top:0.5em;">
-                                Open: {format_time_footer(row['ml_opening_time'])} &nbsp;|&nbsp; Current Update: {format_time_footer(row['last_line_update'])}
+                                Open: {format_time_footer(row['ml_opening_time'])} &nbsp;|&nbsp; {footer_update_label}: {format_time_footer(row['last_line_update'])}
                             </div>
                         </div>
                     </div>
