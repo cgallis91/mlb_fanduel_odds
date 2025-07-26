@@ -36,8 +36,9 @@ def format_team_nickname(nickname, full):
         return "Athletics"
     return nickname
 
-for tab, date_str in zip(tab_labels, tab_dates):
-    with st.tab(tab):
+tab_objs = st.tabs(tab_labels)
+for tab, date_str in zip(tab_objs, tab_dates):
+    with tab:
         games = df[df['date'] == date_str].copy()
         if games.empty:
             st.info("No games found for this day.")
@@ -54,8 +55,8 @@ for tab, date_str in zip(tab_labels, tab_dates):
                 score_home = row['score_home'] if 'score_home' in row else None
                 score_away = row['score_away'] if 'score_away' in row else None
 
-                is_final = status.lower().startswith("final")
-                is_in_progress = not is_final and status and not status.lower().startswith("scheduled") and not status.lower().startswith("not started")
+                is_final = isinstance(status, str) and status.lower().startswith("final")
+                is_in_progress = isinstance(status, str) and not is_final and status and not status.lower().startswith("scheduled") and not status.lower().startswith("not started")
                 has_started = is_final or is_in_progress
 
                 header_time_or_status = (
