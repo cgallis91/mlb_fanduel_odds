@@ -77,9 +77,9 @@ def scrape_odds():
                 venue_state = game_view.get('state', '')
                 consensus = game_view.get('consensus', {})
 
-                # New: Extract game status and scores
+                # Extract game status and scores
                 game_status_text = game_view.get('gameStatusText', '')
-                game_status_code = game_view.get('status', '')  # <-- Added extraction of status code
+                game_status_code = game_view.get('status', '')  # <-- FIXED: extract status code
                 score = {
                     "away": game_view.get("awayTeamScore"),
                     "home": game_view.get("homeTeamScore")
@@ -165,7 +165,7 @@ def scrape_odds():
                     "home_team_name": home_team["name"],
                     # New fields
                     "game_status_text": game_status_text,
-                    "game_status_code": game_status_code,  # <-- Added to output
+                    "game_status_code": game_status_code,  # <-- FIXED: add to output
                     "score_away": score["away"],
                     "score_home": score["home"],
                     "consensus": consensus if consensus else None,
