@@ -123,15 +123,15 @@ for tab, date_str in zip(tabs, tab_dates):
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-right:2px solid #888; border-bottom:none;">Total</th>
                                 </tr>
                                 <tr style="background-color:#f0f2f6;">
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE;">Current</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE;">Current</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:2px solid #888;">Open</th>
-                                    <th style="text-align:center; padding:4px 8px; border-bottom:1px solid #EEE; border-left:1px solid #EEE; border-right:2px solid #888;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE;">Current</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:2px solid #888;">Open</th>
+                                    <th style="text-align:center; padding:4px 8px; border-bottom:none; border-left:1px solid #EEE; border-right:2px solid #888;">Current</th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:center; padding:4px 8px; border-top:2px solid #888; border-left:2px solid #888;">{away_nick}</td>
+                                    <td style="text-align:center; padding:4px 8px; border-top:none; border-left:2px solid #888;">{away_nick}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_odds(row['ml_opening_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:1px solid #EEE;">{format_odds(row['ml_current_away'])}</td>
                                     <td style="text-align:center; padding:4px 8px; border-left:2px solid #888;">{format_run_line(row['rl_opening_away_spread'], row['rl_opening_away_odds'])}</td>
