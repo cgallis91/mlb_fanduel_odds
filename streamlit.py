@@ -3,6 +3,7 @@ from scrape_odds import scrape_odds
 import pandas as pd
 from datetime import datetime, timedelta
 import pytz
+import re
 
 st.set_page_config(page_title="MLB FanDuel Odds Tracker", layout="wide")
 st.title("MLB FanDuel Odds Tracker")
@@ -82,6 +83,12 @@ def format_time_footer(dt_str):
     except Exception:
         return dt_str
 
+def is_time_string(s):
+    # Matches times like "7:05 PM EST", "12:30 PM", etc.
+    if not isinstance(s, str):
+        return False
+    return bool(re.match(r"^\d{1,2}:\d{2}\s*[AP]M", s.strip(), re.IGNORECASE))
+
 tab1, tab2 = st.tabs(tab_labels)
 tabs = [tab1, tab2]
 
@@ -107,9 +114,9 @@ for tab, date_str in zip(tabs, tab_dates):
                 score_home = row.get('score_home', None)
                 score_away = row.get('score_away', None)
 
-                is_final = isinstance(status, str) and status.lower().startswith("final")
-                is_in_progress = isinstance(status, str) and not is_final and status and not status.lower().startswith("scheduled") and not status.lower().startswith("not started")
-                has_started = is_final or is_in_progress
+                # Determine if status is a time (not started) or not (started)
+                # If status is not a time string and not empty, game has started
+                has_started = bool(status and not is_time_string(status))
 
                 # Header: show time if not started, else status text
                 header_time_or_status = status if has_started and status else row['start_time_et']
@@ -118,8 +125,8 @@ for tab, date_str in zip(tabs, tab_dates):
                 current_label = "Close" if has_started else "Current"
 
                 # Team column: add score if started, else blank
-                away_score = f"<span style='color:#2176ae; font-weight:600;'>{score_away}</span>" if has_started and score_away is not None else "&nbsp;&nbsp;"
-                home_score = f"<span style='color:#2176ae; font-weight:600;'>{score_home}</span>" if has_started and score_home is not None else "&nbsp;&nbsp;"
+                away_score = f"<span style='color:#2176ae; font-weight:600;'>{score_away}</span>" if has_started and score_away is not None else ""
+                home_score = f"<span style='color:#2176ae; font-weight:600;'>{score_home}</span>" if has_started and score_home is not None else ""
 
                 # Footer: "Current Update" -> "Close" if started
                 footer_update_label = "Close" if has_started else "Current Update"
@@ -134,7 +141,7 @@ for tab, date_str in zip(tabs, tab_dates):
                             </div>
                             <table style="width:100%; border-collapse:collapse; margin-bottom:0.5em;">
                                 <tr style="background-color:#f0f2f6;">
-                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none; min-width:120px;">Team</th>
+                                    <th rowspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Team</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Money Line</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-bottom:none;">Run Line</th>
                                     <th colspan="2" style="text-align:center; padding:6px 8px; border-left:2px solid #888; border-top:2px solid #888; border-right:2px solid #888; border-bottom:none;">Total</th>
