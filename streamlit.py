@@ -1,3 +1,40 @@
+import streamlit as st
+from scrape_odds import scrape_odds
+import pandas as pd
+from datetime import datetime, timedelta
+import pytz
+
+st.set_page_config(page_title="MLB FanDuel Odds Tracker", layout="wide")
+st.title("MLB FanDuel Odds Tracker")
+
+# --- Data Handling ---
+@st.cache_data(show_spinner=True)
+def get_data():
+    return scrape_odds()
+
+# Update Data Button
+if st.button("Update Data", type="primary"):
+    st.cache_data.clear()
+    st.experimental_rerun()
+
+# Fetch data
+df = get_data()
+
+if df.empty:
+    st.warning("No data available. Please try again later.")
+    st.stop()
+
+# --- Date Handling for Tabs ---
+et = pytz.timezone("US/Eastern")
+now_et = datetime.now(et)
+today = now_et.date()
+tomorrow = today + timedelta(days=1)
+tab_labels = [
+    f"Today - {today.strftime('%A %B %d')}",
+    f"Tomorrow - {tomorrow.strftime('%A %B %d')}"
+]
+tab_dates = [today.strftime("%Y-%m-%d"), tomorrow.strftime("%Y-%m-%d")]
+
 def format_team_nickname(nickname, full):
     # Handle Athletics Athletics
     if full == "Athletics Athletics" or nickname == "Athletics Athletics":
@@ -46,11 +83,12 @@ def format_time_footer(dt_str):
             prefix = "Yesterday"
         else:
             prefix = dt.strftime("%A")
-        return f"{prefix} {dt.strftime('%-I:%M%p EST').lower().replace('est', 'EST')}"
+        return f"{prefix} {dt.strftime('%-I:%M%p EST').replace('est', 'EST')}"
     except Exception:
         return dt_str
 
-# ...existing code...
+tab1, tab2 = st.tabs(tab_labels)
+tabs = [tab1, tab2]
 
 for tab, date_str in zip(tabs, tab_dates):
     with tab:
